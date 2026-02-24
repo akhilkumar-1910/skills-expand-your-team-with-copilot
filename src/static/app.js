@@ -568,6 +568,16 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
         `
         }
+        <div class="share-container">
+          <button class="share-button" data-activity="${name}" aria-label="Share this activity">
+            🔗 Share
+          </button>
+          <div class="share-menu hidden">
+            <a class="share-option share-twitter" href="#" target="_blank" rel="noopener noreferrer">🐦 Twitter</a>
+            <a class="share-option share-facebook" href="#" target="_blank" rel="noopener noreferrer">📘 Facebook</a>
+            <button class="share-option share-copy">📋 Copy Link</button>
+          </div>
+        </div>
       </div>
     `;
 
@@ -586,6 +596,54 @@ document.addEventListener("DOMContentLoaded", () => {
         });
       }
     }
+
+    // Add click handler for share button
+    const shareButton = activityCard.querySelector(".share-button");
+    const shareMenu = activityCard.querySelector(".share-menu");
+    const shareText = `Check out "${name}" at Mergington High School!\nDescription: ${details.description}\nSchedule: ${formattedSchedule}`;
+    const shareUrl = window.location.href;
+
+    shareButton.addEventListener("click", (event) => {
+      event.stopPropagation();
+      if (navigator.share) {
+        navigator.share({ title: name, text: shareText, url: shareUrl }).catch((err) => {
+          if (err.name !== "AbortError") {
+            console.error("Share failed:", err);
+          }
+        });
+      } else {
+        // Toggle the fallback share menu
+        const isHidden = shareMenu.classList.contains("hidden");
+        // Close all other open share menus
+        document.querySelectorAll(".share-menu").forEach((menu) => menu.classList.add("hidden"));
+        if (isHidden) {
+          shareMenu.classList.remove("hidden");
+        }
+      }
+    });
+
+    shareMenu.querySelector(".share-twitter").addEventListener("click", (event) => {
+      event.preventDefault();
+      const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
+      window.open(twitterUrl, "_blank", "noopener,noreferrer");
+      shareMenu.classList.add("hidden");
+    });
+
+    shareMenu.querySelector(".share-facebook").addEventListener("click", (event) => {
+      event.preventDefault();
+      const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(shareText)}`;
+      window.open(facebookUrl, "_blank", "noopener,noreferrer");
+      shareMenu.classList.add("hidden");
+    });
+
+    shareMenu.querySelector(".share-copy").addEventListener("click", () => {
+      navigator.clipboard.writeText(`${shareText}\n${shareUrl}`).then(() => {
+        showMessage("Activity link copied to clipboard!", "success");
+      }).catch(() => {
+        showMessage("Failed to copy link. Please check clipboard permissions or copy manually.", "error");
+      });
+      shareMenu.classList.add("hidden");
+    });
 
     activitiesList.appendChild(activityCard);
   }
@@ -671,6 +729,10 @@ document.addEventListener("DOMContentLoaded", () => {
   window.addEventListener("click", (event) => {
     if (event.target === registrationModal) {
       closeRegistrationModalHandler();
+    }
+    // Close any open share menus when clicking outside
+    if (!event.target.closest(".share-container")) {
+      document.querySelectorAll(".share-menu").forEach((menu) => menu.classList.add("hidden"));
     }
   });
 

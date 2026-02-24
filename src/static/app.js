@@ -923,6 +923,32 @@ document.addEventListener("DOMContentLoaded", () => {
     setTimeRangeFilter,
   };
 
+  // Dark mode toggle
+  const darkModeToggle = document.getElementById("dark-mode-toggle");
+  const darkModeIcon = document.getElementById("dark-mode-icon");
+
+  function applyDarkMode(isDark) {
+    if (isDark) {
+      document.body.classList.add("dark-mode");
+      darkModeIcon.textContent = "☀️";
+      darkModeToggle.title = "Switch to light mode";
+    } else {
+      document.body.classList.remove("dark-mode");
+      darkModeIcon.textContent = "🌙";
+      darkModeToggle.title = "Switch to dark mode";
+    }
+  }
+
+  // Load saved preference
+  const savedDarkMode = localStorage.getItem("darkMode") === "true";
+  applyDarkMode(savedDarkMode);
+
+  darkModeToggle.addEventListener("click", () => {
+    const isDark = document.body.classList.contains("dark-mode");
+    localStorage.setItem("darkMode", String(!isDark));
+    applyDarkMode(!isDark);
+  });
+
   // Initialize app
   checkAuthentication();
   initializeFilters();
